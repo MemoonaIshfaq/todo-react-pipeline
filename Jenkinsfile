@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     stages {
-        stage('Clone Repo') {
+        stage('Checkout Repo') {
             steps {
-                git 'https://github.com/MemoonaIshfaq/todo-react-pipeline.git'
+                checkout scm
             }
         }
 
@@ -23,3 +23,4 @@ pipeline {
         }
     }
 }
+

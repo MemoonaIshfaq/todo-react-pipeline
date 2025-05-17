@@ -1,26 +1,23 @@
 pipeline {
     agent any
 
+    environment {
+        COMPOSE_PROJECT_NAME = "jenkins_ci"
+    }
+
     stages {
-        stage('Checkout Repo') {
+        stage('Clone Repository') {
             steps {
-                checkout scm
+                git 'https://github.com/your-username/your-repo.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build and Run using Docker Compose') {
             steps {
                 script {
-                    docker.build('todo-react-jenkins')
+                    sh 'docker-compose -p $COMPOSE_PROJECT_NAME -f docker-compose.yml up -d --build'
                 }
-            }
-        }
-
-        stage('Run with Docker Compose') {
-            steps {
-                sh 'docker-compose -p todojenkins -f docker-compose.yml up -d'
             }
         }
     }
 }
-

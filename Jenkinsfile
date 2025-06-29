@@ -21,14 +21,42 @@ pipeline {
                 }
             }
         }
+
+        stage('Run Selenium Tests') {
+            steps {
+                script {
+                    sh '''
+                        docker run --rm \
+                        --network=host \
+                        -v "$PWD:/tests" \
+                        -w /tests \
+                        python:3.10-slim bash -c "
+                            apt-get update && apt-get install -y wget unzip curl gnupg && \
+                            curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+                            echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' > /etc/apt/sources.list.d/google-chrome.list && \
+                            apt-get update && apt-get install -y google-chrome-stable && \
+                            pip install selenium webdriver-manager && \
+                            python test_cases.py
+                        "
+                    '''
+                }
+            }
+        }
     }
 
     post {
-        failure {
-            echo 'Build failed. Please check the Jenkins logs for more details.'
+        always {
+            echo 'Pipeline finished.'
         }
         success {
-            echo 'Build and Docker Compose ran successfully!'
+            mail to: 'qasimalik@gmail.com',
+                 subject: "✅ Jenkins Pipeline Success - Todo App",
+                 body: "Build + Test completed successfully.\n\nRegards,\nJenkins"
+        }
+        failure {
+            mail to: 'qasimalik@gmail.com',
+                 subject: "❌ Jenkins Pipeline Failed - Todo App",
+                 body: "Pipeline failed. Please check Jenkins console for errors.\n\nRegards,\nJenkins"
         }
     }
 }

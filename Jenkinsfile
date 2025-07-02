@@ -2,23 +2,23 @@ pipeline {
     agent any
 
     environment {
-        AUTHOR_EMAIL = sh(script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
+        EC2_IP = "http://54.197.18.201:3001"
     }
 
     stages {
-        stage('Clone') {
+        stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/MemoonaIshfaq/todo-react-pipeline.git'
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Selenium Tests') {
             steps {
                 sh 'docker-compose -f docker-compose.yml up --build --abort-on-container-exit test-runner'
             }
         }
 
-        stage('Deploy App') {
+        stage('Deploy React App') {
             steps {
                 sh 'docker-compose -f docker-compose.yml up -d react-app'
             }
@@ -29,16 +29,16 @@ pipeline {
         always {
             script {
                 def authorEmail = sh(script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
-                echo "Commit author email: ${authorEmail}"
-                
                 if (authorEmail == "qasimalik@gmail.com") {
+                    def log = currentBuild.rawBuild.getLog(100).join("\n")
+
                     emailext(
-                        subject: "🧪 Jenkins Test Results for Instructor",
-                        body: "Tests finished. View Jenkins Build: ${env.BUILD_URL}",
-                        to: 'qasimalik@gmail.com'
+                        subject: "📋 Jenkins Test Results",
+                        body: "${log}",
+                        to: "qasimalik@gmail.com"
                     )
                 } else {
-                    echo "No email sent. Commit not made by instructor."
+                    echo "No email sent – commit not made by instructor."
                 }
             }
         }

@@ -1,7 +1,7 @@
 // src/components/TodoForm.js
 import React, { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import { addDoc, collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 
 const TodoForm = () => {
   const [task, setTask] = useState({
@@ -38,6 +38,15 @@ const TodoForm = () => {
       ...doc.data(),
     }));
     setTaskList(tasksArray);
+  };
+
+  const handleDeleteTask = async (id) => {
+    try {
+      await deleteDoc(doc(db, "tasks", id));
+      fetchTasks();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
   };
 
   useEffect(() => {
@@ -99,6 +108,12 @@ const TodoForm = () => {
             <p>
               <strong>Date:</strong> {t.date}
             </p>
+            <button
+              onClick={() => handleDeleteTask(t.id)}
+              className="mt-2 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-700"
+            >
+              Delete
+            </button>
           </div>
         ))}
       </div>

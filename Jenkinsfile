@@ -2,38 +2,45 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_BUILDKIT = 1
+        AUTHOR_EMAIL = sh(script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
     }
 
     stages {
-        stage('Clone Repo') {
+        stage('Clone') {
             steps {
                 git branch: 'main', url: 'https://github.com/MemoonaIshfaq/todo-react-pipeline.git'
             }
         }
 
-        stage('Run Tests using Docker Compose') {
+        stage('Run Tests') {
             steps {
-                sh 'docker-compose up --build --abort-on-container-exit'
+                sh 'docker-compose -f docker-compose.yml up --build --abort-on-container-exit test-runner'
+            }
+        }
+
+        stage('Deploy App') {
+            steps {
+                sh 'docker-compose -f docker-compose.yml up -d react-app'
             }
         }
     }
 
     post {
-        success {
-            emailext (
-                subject: "✅ Test Passed: ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
-                body: "All Selenium tests passed successfully!\n${env.BUILD_URL}",
-                recipientProviders: [[$class: 'CulpritsRecipientProvider']]
-            )
-        }
-
-        failure {
-            emailext (
-                subject: "❌ Test Failed: ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
-                body: "Some Selenium tests failed.\n${env.BUILD_URL}",
-                recipientProviders: [[$class: 'CulpritsRecipientProvider']]
-            )
+        always {
+            script {
+                def authorEmail = sh(script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
+                echo "Commit author email: ${authorEmail}"
+                
+                if (authorEmail == "qasimalik@gmail.com") {
+                    emailext(
+                        subject: "🧪 Jenkins Test Results for Instructor",
+                        body: "Tests finished. View Jenkins Build: ${env.BUILD_URL}",
+                        to: 'qasimalik@gmail.com'
+                    )
+                } else {
+                    echo "No email sent. Commit not made by instructor."
+                }
+            }
         }
     }
 }

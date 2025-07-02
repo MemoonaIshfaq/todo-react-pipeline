@@ -1,9 +1,6 @@
 version: "3.8"
+
 services:
-  react-app:
-    container_name: todo-react-jenkins
-    image: memoona2/todo-react-app:latest
-    ports:
-      - "3001:3000"
-    volumes:
-      - .:/usr/src/app
+  test-runner:
+    build: .
+    container_name: selenium-todo-tests

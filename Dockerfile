@@ -1,28 +1,17 @@
-FROM python:3.11-slim
+# Use a Selenium-ready Python image (includes Chrome, drivers, Xvfb, GTK, etc.)
+FROM seleniarm/python:3.11
 
-RUN apt-get update && apt-get install -y \
-    wget curl unzip gnupg xvfb \
-    libnss3 libxss1 libappindicator1 \
-    libatk-bridge2.0-0 libgtk-3-0 libasound2 \
-    && rm -rf /var/lib/apt/lists/*
+# Set environment variables to avoid issues with headless browsers
+ENV DISPLAY=:99
 
-# Install Chrome
-RUN curl -O https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    apt-get install -y ./google-chrome-stable_current_amd64.deb && \
-    rm google-chrome-stable_current_amd64.deb
+# Set the working directory inside the container
+WORKDIR /app
 
-# Install ChromeDriver
-RUN CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+') && \
-    CHROMEDRIVER_VERSION=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json | grep -B5 $CHROME_VERSION | grep version | head -1 | cut -d\" -f4) && \
-    wget https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip && \
-    unzip chromedriver-linux64.zip && \
-    mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver && \
-    chmod +x /usr/local/bin/chromedriver && \
-    rm -rf chromedriver-linux64*
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
+# Copy your project files into the container
 COPY . .
 
-CMD ["python", "-m", "unittest", "discover", "-s", "tests"]
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Default command to run tests (you can override in docker-compose)
+CMD ["pytest", "--maxfail=5", "--disable-warnings", "-q"]

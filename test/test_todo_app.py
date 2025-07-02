@@ -22,7 +22,7 @@ class TestTodoApp(unittest.TestCase):
         options.add_argument("--allow-insecure-localhost")
 
         cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        cls.driver.get("http://localhost:3001")  # Change if hosted elsewhere
+        cls.driver.get(os.environ.get("BASE_URL", "http://localhost:3001"))
         time.sleep(2)
 
     @classmethod

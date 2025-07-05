@@ -14,7 +14,15 @@ pipeline {
 
         stage('Run Selenium Tests') {
             steps {
-                sh 'docker-compose -f docker-compose.yml up --build --abort-on-container-exit test-runner'
+                sh '''
+                    docker-compose -f docker-compose.yml up --build --abort-on-container-exit --exit-code-from test-runner test-runner
+                '''
+            }
+        }
+
+        stage('Cleanup Test Containers') {
+            steps {
+                sh 'docker-compose -f docker-compose.yml down'
             }
         }
 
@@ -30,7 +38,7 @@ pipeline {
             script {
                 def authorEmail = sh(script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
                 if (authorEmail == "qasimalik@gmail.com") {
-                    def log = currentBuild.rawBuild.getLog(100).join("\n")
+                    def log = currentBuild.rawBuild.getLog(999).join("\n")
 
                     emailext(
                         subject: "📋 Jenkins Test Results",

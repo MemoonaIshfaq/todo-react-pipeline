@@ -1,17 +1,19 @@
-# Use a Selenium-ready Python image (includes Chrome, drivers, Xvfb, GTK, etc.)
-FROM seleniarm/python:3.11
+# ✅ Use official Selenium base image with Chrome + Python support
+FROM selenium/standalone-chrome:latest
 
-# Set environment variables to avoid issues with headless browsers
-ENV DISPLAY=:99
+# Install Python tools (it's based on Debian, so apt works)
+USER root
 
-# Set the working directory inside the container
-WORKDIR /app
+# Upgrade pip and install required packages
+RUN apt-get update && \
+    apt-get install -y python3-pip && \
+    pip install --no-cache-dir pytest selenium
 
-# Copy your project files into the container
+# Optional: set working dir
+WORKDIR /tests
+
+# Copy test files into the container
 COPY . .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Default command to run tests (you can override in docker-compose)
+# Default command to run tests (can be overridden)
 CMD ["pytest", "--maxfail=5", "--disable-warnings", "-q"]

@@ -1,23 +1,31 @@
-# Use a compatible Node version
-FROM node:18-alpine
+# Use lighter Node base image
+FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
+# Only copy necessary files first for layer caching
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies faster with optional peer dep bypass
 RUN npm install --legacy-peer-deps
 
-# Copy the rest of the app
+# Now copy rest of the code
 COPY . .
 
-# Build the app
+# Build static files
 RUN npm run build
 
-# Install serve globally
+# ---------- Production image ----------
+FROM node:18-alpine
+
+# Install serve only in production image
 RUN npm install -g serve
 
-# Expose port and run the app
+WORKDIR /app
+
+# Copy only build artifacts from previous stage
+COPY --from=builder /app/build ./build
+
+# Serve the static files
 EXPOSE 3000
 CMD ["serve", "-s", "build", "-l", "3000"]

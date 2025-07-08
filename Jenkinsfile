@@ -17,15 +17,11 @@ pipeline {
         stage('Check Commit Author') {
             steps {
                 script {
-                    def authorEmail = sh(
+                    env.AUTHOR_EMAIL = sh(
                         script: "git log -1 --pretty=format:'%ae'",
                         returnStdout: true
                     ).trim()
-                    currentBuild.description = "Last commit by: ${authorEmail}"
-                    if (authorEmail != env.INSTRUCTOR_EMAIL) {
-                        currentBuild.result = 'SUCCESS'
-                        error("Not instructor's commit. Skipping pipeline.")
-                    }
+                    currentBuild.description = "Last commit by: ${env.AUTHOR_EMAIL}"
                 }
             }
         }
@@ -63,16 +59,25 @@ pipeline {
         always {
             sh 'docker stop todo-app || true'
         }
+
         success {
-            mail to: "${env.INSTRUCTOR_EMAIL}",
-                 subject: "Jenkins Test Success: To-Do App",
-                 body: "All tests passed successfully."
+            script {
+                if (env.AUTHOR_EMAIL == env.INSTRUCTOR_EMAIL) {
+                    mail to: "${env.INSTRUCTOR_EMAIL}",
+                         subject: "✅ Jenkins Test Success: To-Do App",
+                         body: "All tests passed successfully."
+                }
+            }
         }
+
         failure {
-            mail to: "${env.INSTRUCTOR_EMAIL}",
-                 subject: "Jenkins Test Failure: To-Do App",
-                 body: "Some tests failed. Please check the Jenkins logs for details."
+            script {
+                if (env.AUTHOR_EMAIL == env.INSTRUCTOR_EMAIL) {
+                    mail to: "${env.INSTRUCTOR_EMAIL}",
+                         subject: "❌ Jenkins Test Failure: To-Do App",
+                         body: "Some tests failed. Please check the Jenkins logs for details."
+                }
+            }
         }
     }
 }
-

@@ -66,14 +66,13 @@ pipeline {
         success {
             mail to: "${env.INSTRUCTOR_EMAIL}",
                  subject: "Jenkins Test Success: To-Do App",
-                 body: "All tests passed. See attached log.",
-                 attachLog: true
+                 body: "All tests passed successfully."
         }
         failure {
             mail to: "${env.INSTRUCTOR_EMAIL}",
                  subject: "Jenkins Test Failure: To-Do App",
-                 body: "Some tests failed. See attached log.",
-                 attachLog: true
+                 body: "Some tests failed. Please check the Jenkins logs for details."
         }
     }
-} 
+}
+
